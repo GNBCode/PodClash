@@ -12,7 +12,8 @@ module.exports = async function handler(req, res) {
   if (topic.length > 200) {
     return res.status(400).json({ error: 'Topic is too long.' });
   }
-const apiKey = process.env.OPENROUTER_API_KEY;
+
+  const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) {
     return res.status(500).json({ error: 'API key not configured on server.' });
   }
@@ -74,41 +75,44 @@ Return a JSON object (and NOTHING else — no markdown, no backticks, no explana
 Use real, well-known podcasts with significant audiences. Choose podcasts that genuinely have contrasting views — not just slightly different perspectives. The contrast should be meaningful and interesting.`;
 
   try {
-    const geminiRes = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+    const response = await fetch(
+      'https://openrouter.ai/api/v1/chat/completions',
       {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`
+        },
         body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: {
-            temperature: 0.7,
-            maxOutputTokens: 1500,
-          }
+          model: 'openrouter/auto',
+          messages: [{ role: 'user', content: prompt }],
+          max_tokens: 1500
         })
       }
     );
 
-    if (!geminiRes.ok) {
-      const errData = await geminiRes.json();
-      console.error('Gemini API error:', errData);
-      return res.status(502).json({ error: 'Failed to get a response from the AI. Please try again.' });
+    if (!response.ok) {
+      const errData = await response.json();
+      console.error('OpenRouter error:', errData);
+      return res.status(502).json({ error: errData?.error?.message || JSON.stringify(errData) });
     }
 
-    const data = await geminiRes.json();
-    const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    const data = await response.json();
+    const rawText = data?.choices?.[0]?.message?.content || '';
 
     if (!rawText) {
-      console.error('Empty Gemini response:', JSON.stringify(data));
+      console.error('Empty response:', JSON.stringify(data));
       return res.status(500).json({ error: 'Empty response from AI. Please try again.' });
     }
 
     let parsed;
     try {
       const cleaned = rawText.replace(/```json|```/g, '').trim();
-      parsed = JSON.parse(cleaned);
+      const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) throw new Error('No JSON found');
+      parsed = JSON.parse(jsonMatch[0]);
     } catch (e) {
-      console.error('JSON parse error. Raw text:', rawText);
+      console.error('JSON parse error:', rawText);
       return res.status(500).json({ error: 'Could not parse AI response. Please try a different topic.' });
     }
 
