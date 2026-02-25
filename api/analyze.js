@@ -12,8 +12,7 @@ module.exports = async function handler(req, res) {
   if (topic.length > 200) {
     return res.status(400).json({ error: 'Topic is too long.' });
   }
-
-  const apiKey = process.env.GEMINI_API_KEY;
+const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) {
     return res.status(500).json({ error: 'API key not configured on server.' });
   }
