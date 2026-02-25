@@ -13,7 +13,7 @@ module.exports = async function handler(req, res) {
     return res.status(400).json({ error: 'Topic is too long.' });
   }
 
-  const apiKey = process.env.OPENROUTER_API_KEY;
+  const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
     return res.status(500).json({ error: 'API key not configured on server.' });
   }
@@ -34,6 +34,9 @@ Return a JSON object (and NOTHING else — no markdown, no backticks, no explana
     "episode": "Episode title or description",
     "url": "https://podcast-url.com",
     "hosts": "Host name(s)",
+    "rank": 1,
+    "listeners": "e.g. ~5M listeners/month",
+    "why_chosen": "One sentence explaining why this podcast was selected and what makes its viewpoint notable",
     "stance_label": "One-sentence label for their position",
     "stance_detail": "2-3 sentences explaining their position on the topic",
     "summary": "3-4 sentences summarizing what they argue, their key evidence, and their conclusion"
@@ -43,6 +46,9 @@ Return a JSON object (and NOTHING else — no markdown, no backticks, no explana
     "episode": "Episode title or description",
     "url": "https://podcast-url.com",
     "hosts": "Host name(s)",
+    "rank": 2,
+    "listeners": "e.g. ~3M listeners/month",
+    "why_chosen": "One sentence explaining why this podcast was selected and what makes its viewpoint notable",
     "stance_label": "One-sentence label for their position",
     "stance_detail": "2-3 sentences explaining their position on the topic",
     "summary": "3-4 sentences summarizing what they argue, their key evidence, and their conclusion"
@@ -69,42 +75,39 @@ Return a JSON object (and NOTHING else — no markdown, no backticks, no explana
 Use real, well-known podcasts with significant audiences. Choose podcasts that genuinely have contrasting views — not just slightly different perspectives. The contrast should be meaningful and interesting.`;
 
   try {
-    const openRouterRes = await fetch(
-      'https://openrouter.ai/api/v1/chat/completions',
+    const geminiRes = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
       {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          model: 'openrouter/auto',
-          messages: [{ role: 'user', content: prompt }],
-          max_tokens: 1500
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: {
+            temperature: 0.7,
+            maxOutputTokens: 1500,
+          }
         })
       }
     );
 
-    if (!openRouterRes.ok) {
-      const errData = await openRouterRes.json();
-      console.error('OpenRouter API error:', errData);
-      return res.status(502).json({ error: errData?.error?.message || JSON.stringify(errData) });
+    if (!geminiRes.ok) {
+      const errData = await geminiRes.json();
+      console.error('Gemini API error:', errData);
+      return res.status(502).json({ error: 'Failed to get a response from the AI. Please try again.' });
     }
 
-    const data = await openRouterRes.json();
-    const rawText = data?.choices?.[0]?.message?.content || '';
+    const data = await geminiRes.json();
+    const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
 
     if (!rawText) {
-      console.error('Empty OpenRouter response:', JSON.stringify(data));
+      console.error('Empty Gemini response:', JSON.stringify(data));
       return res.status(500).json({ error: 'Empty response from AI. Please try again.' });
     }
 
     let parsed;
     try {
       const cleaned = rawText.replace(/```json|```/g, '').trim();
-const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
-if (!jsonMatch) throw new Error('No JSON found');
-parsed = JSON.parse(jsonMatch[0]);
+      parsed = JSON.parse(cleaned);
     } catch (e) {
       console.error('JSON parse error. Raw text:', rawText);
       return res.status(500).json({ error: 'Could not parse AI response. Please try a different topic.' });
