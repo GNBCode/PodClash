@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PodcastClash — Find Opposing Views</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap');
+
+  :root {
+    --bg: #0d0d0d;
+    --surface: #141414;
+    --border: #2a2a2a;
+    --accent-left: #e8c547;
+    --accent-right: #e84747;
+    --text: #f0ede8;
+    --muted: #7a7570;
+    --vs: #ffffff;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 1000;
+    opacity: 0.4;
+  }
+
+  header {
+    padding: 3rem 2rem 2rem;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .logo {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2.5rem, 6vw, 4.5rem);
+    font-weight: 900;
+    letter-spacing: -0.02em;
+    line-height: 1;
+  }
+
+  .logo .clash { font-style: italic; color: var(--accent-left); }
+
+  .tagline {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--muted);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-top: 0.75rem;
+  }
+
+  .search-section {
+    max-width: 700px;
+    margin: 3rem auto;
+    padding: 0 2rem;
+  }
+
+  .search-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    display: block;
+    margin-bottom: 0.75rem;
+  }
+
+  .search-row {
+    display: flex;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    transition: border-color 0.2s;
+  }
+
+  .search-row:focus-within { border-color: var(--accent-left); }
+
+  .search-row input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font-family: 'Playfair Display', serif;
+    font-size: 1.4rem;
+    padding: 1rem 1.25rem;
+    font-style: italic;
+  }
+
+  .search-row input::placeholder { color: var(--muted); opacity: 0.6; }
+
+  .search-btn {
+    background: var(--accent-left);
+    color: #0d0d0d;
+    border: none;
+    cursor: pointer;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 0 1.5rem;
+    transition: background 0.2s, transform 0.1s;
+    white-space: nowrap;
+  }
+
+  .search-btn:hover { background: #f0d060; }
+  .search-btn:active { transform: scale(0.98); }
+  .search-btn:disabled { background: var(--border); color: var(--muted); cursor: not-allowed; }
+
+  #status-area {
+    max-width: 700px;
+    margin: 0 auto 2rem;
+    padding: 0 2rem;
+  }
+
+  .status-line {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.4rem 0;
+    opacity: 0;
+    transform: translateY(4px);
+    transition: opacity 0.3s, transform 0.3s;
+  }
+
+  .status-line.visible { opacity: 1; transform: translateY(0); }
+  .status-line.done { color: var(--accent-left); }
+  .status-line.error-status { color: var(--accent-right); }
+
+  .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+
+  .spinner {
+    width: 10px; height: 10px;
+    border: 1.5px solid currentColor;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    flex-shrink: 0;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  #results {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 2rem 4rem;
+    display: none;
+  }
+
+  .clash-header { text-align: center; margin-bottom: 3rem; }
+
+  .topic-pill {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    display: inline-block;
+    padding: 0.35rem 0.85rem;
+    margin-bottom: 1rem;
+  }
+
+  .clash-header h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(1.5rem, 4vw, 2.5rem);
+    font-weight: 700;
+  }
+
+  .versus-layout {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 0;
+    align-items: start;
+    margin-bottom: 3rem;
+  }
+
+  .podcast-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 2rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .podcast-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+  }
+
+  .podcast-card.left::before { background: var(--accent-left); }
+  .podcast-card.right::before { background: var(--accent-right); }
+
+  .card-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 0.75rem;
+  }
+
+  .card-label.left { color: var(--accent-left); }
+  .card-label.right { color: var(--accent-right); }
+
+  .podcast-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.4rem;
+    font-weight: 700;
+    line-height: 1.2;
+    margin-bottom: 0.4rem;
+  }
+
+  .episode-name {
+    font-size: 0.85rem;
+    color: var(--muted);
+    font-style: italic;
+    margin-bottom: 1.25rem;
+    line-height: 1.4;
+  }
+
+  .stance-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 0.4rem;
+  }
+
+  .stance-text { font-size: 1rem; line-height: 1.6; margin-bottom: 1.5rem; font-weight: 500; }
+
+  .summary-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 0.5rem;
+    margin-top: 1.25rem;
+  }
+
+  .summary-text { font-size: 0.9rem; line-height: 1.7; color: #c5c2bd; }
+
+  .podcast-link {
+    display: inline-block;
+    margin-top: 1.25rem;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    text-decoration: none;
+    padding: 0.4rem 0.85rem;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    transition: border-color 0.2s, color 0.2s;
+  }
+
+  .podcast-link:hover { border-color: var(--text); color: var(--text); }
+
+  .vs-divider {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1rem;
+    min-width: 60px;
+  }
+
+  .vs-text {
+    font-family: 'Playfair Display', serif;
+    font-size: 2rem;
+    font-weight: 900;
+    font-style: italic;
+    color: var(--vs);
+    writing-mode: vertical-rl;
+    letter-spacing: 0.1em;
+  }
+
+  .differences-section {
+    border: 1px solid var(--border);
+    background: var(--surface);
+    padding: 2rem;
+  }
+
+  .differences-section h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .differences-section h3::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  .diff-item {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border: 1px solid var(--border);
+    margin-bottom: 1rem;
+  }
+
+  .diff-item:last-child { margin-bottom: 0; }
+
+  .diff-point {
+    padding: 1rem 1.25rem;
+    font-size: 0.88rem;
+    line-height: 1.6;
+    position: relative;
+  }
+
+  .diff-point::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 2px;
+    height: 100%;
+  }
+
+  .diff-point.left::before { background: var(--accent-left); }
+  .diff-point.right::before { background: var(--accent-right); }
+  .diff-point.right { border-left: 1px solid var(--border); }
+
+  .diff-topic {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 0.4rem;
+  }
+
+  .error-box {
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 1.25rem;
+    border: 1px solid var(--accent-right);
+    background: rgba(232,71,71,0.05);
+    font-size: 0.9rem;
+    color: #e88888;
+    font-family: 'DM Mono', monospace;
+  }
+
+  @media (max-width: 700px) {
+    .versus-layout { grid-template-columns: 1fr; }
+    .vs-divider { padding: 1rem; flex-direction: row; }
+    .vs-text { writing-mode: horizontal-tb; font-size: 1.5rem; }
+    .diff-item { grid-template-columns: 1fr; }
+    .diff-point.right { border-left: none; border-top: 1px solid var(--border); }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Podcast<span class="clash">Clash</span></div>
+  <div class="tagline">Discover opposing views across popular podcasts</div>
+</header>
+
+<div class="search-section">
+  <label class="search-label" for="topic-input">Enter a topic to analyze</label>
+  <div class="search-row">
+    <input type="text" id="topic-input" placeholder="e.g. artificial intelligence, vaccines, crypto…" />
+    <button class="search-btn" id="search-btn" onclick="runSearch()">Analyze →</button>
+  </div>
+</div>
+
+<div id="status-area"></div>
+<div id="error-area" style="max-width:700px;margin:0 auto;padding:0 2rem;"></div>
+<div id="results"></div>
+
+<script>
+const STEPS = [
+  "Searching for popular podcasts on this topic…",
+  "Analyzing viewpoints and positions…",
+  "Identifying the most contrasting perspectives…",
+  "Generating comparison report…"
+];
+
+function addStatus(text, state = 'active') {
+  const area = document.getElementById('status-area');
+  const div = document.createElement('div');
+  div.className = 'status-line';
+  div.innerHTML = `<div class="${state === 'active' ? 'spinner' : 'dot'}"></div><span>${text}</span>`;
+  area.appendChild(div);
+  requestAnimationFrame(() => div.classList.add('visible'));
+  return div;
+}
+
+function markAllDone() {
+  document.querySelectorAll('.status-line').forEach(el => {
+    el.classList.add('done');
+    const spinner = el.querySelector('.spinner');
+    if (spinner) { const d = document.createElement('div'); d.className = 'dot'; spinner.replaceWith(d); }
+  });
+}
+
+async function runSearch() {
+  const topic = document.getElementById('topic-input').value.trim();
+  if (!topic) return;
+
+  document.getElementById('status-area').innerHTML = '';
+  document.getElementById('error-area').innerHTML = '';
+  document.getElementById('results').style.display = 'none';
+  document.getElementById('search-btn').disabled = true;
+
+  const s1 = addStatus(STEPS[0]);
+  const timers = STEPS.slice(1).map((text, i) =>
+    setTimeout(() => addStatus(text), (i + 1) * 1200)
+  );
+
+  try {
+    const response = await fetch('/api/analyze', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ topic })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || 'Something went wrong.');
+    }
+
+    timers.forEach(clearTimeout);
+    markAllDone();
+    renderResults(data);
+
+  } catch (err) {
+    timers.forEach(clearTimeout);
+    markAllDone();
+    document.getElementById('error-area').innerHTML =
+      `<div class="error-box">⚠ ${escHtml(err.message || 'Something went wrong. Please try again.')}</div>`;
+  } finally {
+    document.getElementById('search-btn').disabled = false;
+  }
+}
+
+function renderResults(data) {
+  const left = data.podcast_left;
+  const right = data.podcast_right;
+
+  const diffsHTML = (data.key_differences || []).map(d => `
+    <div class="diff-item">
+      <div class="diff-point left">
+        <div class="diff-topic">${escHtml(d.dimension)} — ${escHtml(left.name)}</div>
+        ${escHtml(d.left_view)}
+      </div>
+      <div class="diff-point right">
+        <div class="diff-topic">${escHtml(d.dimension)} — ${escHtml(right.name)}</div>
+        ${escHtml(d.right_view)}
+      </div>
+    </div>
+  `).join('');
+
+  document.getElementById('results').innerHTML = `
+    <div class="clash-header">
+      <div class="topic-pill">Topic Analysis</div>
+      <h2>Opposing Views on: ${escHtml(data.topic)}</h2>
+    </div>
+    <div class="versus-layout">
+      <div class="podcast-card left">
+        <div class="card-label left">● Perspective A</div>
+        <div class="podcast-name">${escHtml(left.name)}</div>
+        <div class="episode-name">${escHtml(left.episode)}${left.hosts ? ' · ' + escHtml(left.hosts) : ''}</div>
+        <div class="stance-label">Their Stance</div>
+        <div class="stance-text">${escHtml(left.stance_label)}</div>
+        <div class="summary-label">Position Detail</div>
+        <div class="summary-text">${escHtml(left.stance_detail)}</div>
+        <div class="summary-label">In Depth</div>
+        <div class="summary-text">${escHtml(left.summary)}</div>
+        ${left.url ? `<a class="podcast-link" href="${escHtml(left.url)}" target="_blank" rel="noopener">Visit Podcast ↗</a>` : ''}
+      </div>
+      <div class="vs-divider"><div class="vs-text">VS</div></div>
+      <div class="podcast-card right">
+        <div class="card-label right">● Perspective B</div>
+        <div class="podcast-name">${escHtml(right.name)}</div>
+        <div class="episode-name">${escHtml(right.episode)}${right.hosts ? ' · ' + escHtml(right.hosts) : ''}</div>
+        <div class="stance-label">Their Stance</div>
+        <div class="stance-text">${escHtml(right.stance_label)}</div>
+        <div class="summary-label">Position Detail</div>
+        <div class="summary-text">${escHtml(right.stance_detail)}</div>
+        <div class="summary-label">In Depth</div>
+        <div class="summary-text">${escHtml(right.summary)}</div>
+        ${right.url ? `<a class="podcast-link" href="${escHtml(right.url)}" target="_blank" rel="noopener">Visit Podcast ↗</a>` : ''}
+      </div>
+    </div>
+    ${diffsHTML ? `<div class="differences-section"><h3>Where They Differ</h3>${diffsHTML}</div>` : ''}
+  `;
+
+  document.getElementById('results').style.display = 'block';
+  document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function escHtml(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+document.getElementById('topic-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') runSearch();
+});
+</script>
+</body>
+</html>
