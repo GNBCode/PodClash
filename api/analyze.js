@@ -13,7 +13,7 @@ module.exports = async function handler(req, res) {
     return res.status(400).json({ error: 'Topic is too long.' });
   }
 
-  const apiKey = process.env.GEMINI_API_KEY;
+  const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) {
     return res.status(500).json({ error: 'API key not configured on server.' });
   }
@@ -69,32 +69,33 @@ Return a JSON object (and NOTHING else — no markdown, no backticks, no explana
 Use real, well-known podcasts with significant audiences. Choose podcasts that genuinely have contrasting views — not just slightly different perspectives. The contrast should be meaningful and interesting.`;
 
   try {
-    const geminiRes = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+    const openRouterRes = await fetch(
+      'https://openrouter.ai/api/v1/chat/completions',
       {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`
+        },
         body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: {
-            temperature: 0.7,
-            maxOutputTokens: 1500,
-          }
+          model: 'meta-llama/llama-3.1-8b-instruct:free',
+          messages: [{ role: 'user', content: prompt }],
+          max_tokens: 1500
         })
       }
     );
 
- if (!geminiRes.ok) {
-      const errData = await geminiRes.json();
-      console.error('Gemini API error:', errData);
+    if (!openRouterRes.ok) {
+      const errData = await openRouterRes.json();
+      console.error('OpenRouter API error:', errData);
       return res.status(502).json({ error: errData?.error?.message || JSON.stringify(errData) });
     }
 
-    const data = await geminiRes.json();
-    const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    const data = await openRouterRes.json();
+    const rawText = data?.choices?.[0]?.message?.content || '';
 
     if (!rawText) {
-      console.error('Empty Gemini response:', JSON.stringify(data));
+      console.error('Empty OpenRouter response:', JSON.stringify(data));
       return res.status(500).json({ error: 'Empty response from AI. Please try again.' });
     }
 
