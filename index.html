@@ -2,6 +2,15 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="application-name" content="PodcastClash">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="PodcastClash">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#b8860b">
+<meta name="description" content="Discover opposing views across popular podcasts on any topic.">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' fill='%23f5f2ee'/%3E%3Ccircle cx='256' cy='256' r='220' fill='%23b8860b'/%3E%3Ctext x='256' y='340' font-size='240' text-anchor='middle' font-family='Georgia,serif' fill='white'%3E%26%23127897%3B%3C/text%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' fill='%23f5f2ee'/%3E%3Ccircle cx='256' cy='256' r='220' fill='%23b8860b'/%3E%3Ctext x='256' y='340' font-size='240' text-anchor='middle' font-family='Georgia,serif' fill='white'%3E%26%23127897%3B%3C/text%3E%3C/svg%3E">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PodcastClash — Find Opposing Views</title>
 <style>
@@ -521,7 +530,8 @@ function cardHTML(pod, side) {
       <div class="card-label ${side}">● Perspective ${side === 'left' ? 'A' : 'B'}</div>
       <div class="podcast-name">${escHtml(pod.name)}</div>
       <div class="episode-name">${escHtml(pod.episode)}${pod.hosts ? ' · ' + escHtml(pod.hosts) : ''}</div>
-${pod.rank ? `<div class="ranking-badge">🎙 Rank #${escHtml(String(pod.rank))} · ${escHtml(pod.listeners || '')}</div>` : ''}
+      ${pod.rank ? `<div class="ranking-badge">🎙 Rank #${escHtml(String(pod.rank))} · ${escHtml(pod.listeners || '')}</div>` : ''}
+      ${pod.why_chosen ? `<div class="ranking-reason">"${escHtml(pod.why_chosen)}"</div>` : ''}
       <div class="section-label">Their Stance</div>
       <div class="stance-text">${escHtml(pod.stance_label)}</div>
       <div class="section-label">Position Detail</div>
