@@ -521,8 +521,7 @@ function cardHTML(pod, side) {
       <div class="card-label ${side}">● Perspective ${side === 'left' ? 'A' : 'B'}</div>
       <div class="podcast-name">${escHtml(pod.name)}</div>
       <div class="episode-name">${escHtml(pod.episode)}${pod.hosts ? ' · ' + escHtml(pod.hosts) : ''}</div>
-      ${pod.rank ? `<div class="ranking-badge">🎙 Rank #${escHtml(String(pod.rank))} · ${escHtml(pod.listeners || '')}</div>` : ''}
-      ${pod.why_chosen ? `<div class="ranking-reason">"${escHtml(pod.why_chosen)}"</div>` : ''}
+${pod.rank ? `<div class="ranking-badge">🎙 Rank #${escHtml(String(pod.rank))} · ${escHtml(pod.listeners || '')}</div>` : ''}
       <div class="section-label">Their Stance</div>
       <div class="stance-text">${escHtml(pod.stance_label)}</div>
       <div class="section-label">Position Detail</div>
