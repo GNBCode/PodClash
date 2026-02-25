@@ -78,7 +78,7 @@ Use real, well-known podcasts with significant audiences. Choose podcasts that g
           'Authorization': `Bearer ${apiKey}`
         },
         body: JSON.stringify({
-          model: 'google/gemini-2.0-flash-exp:free',
+          model: 'openrouter/auto',
           messages: [{ role: 'user', content: prompt }],
           max_tokens: 1500
         })
