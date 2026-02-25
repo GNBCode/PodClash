@@ -102,7 +102,9 @@ Use real, well-known podcasts with significant audiences. Choose podcasts that g
     let parsed;
     try {
       const cleaned = rawText.replace(/```json|```/g, '').trim();
-      parsed = JSON.parse(cleaned);
+const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
+if (!jsonMatch) throw new Error('No JSON found');
+parsed = JSON.parse(jsonMatch[0]);
     } catch (e) {
       console.error('JSON parse error. Raw text:', rawText);
       return res.status(500).json({ error: 'Could not parse AI response. Please try a different topic.' });
