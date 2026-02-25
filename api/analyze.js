@@ -84,10 +84,10 @@ Use real, well-known podcasts with significant audiences. Choose podcasts that g
       }
     );
 
-    if (!geminiRes.ok) {
+ if (!geminiRes.ok) {
       const errData = await geminiRes.json();
       console.error('Gemini API error:', errData);
-      return res.status(502).json({ error: 'Failed to get a response from the AI. Please try again.' });
+      return res.status(502).json({ error: errData?.error?.message || JSON.stringify(errData) });
     }
 
     const data = await geminiRes.json();
