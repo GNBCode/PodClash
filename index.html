@@ -2,31 +2,40 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="application-name" content="PodcastClash">
+<meta name="application-name" content="PodClash">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="PodcastClash">
+<meta name="apple-mobile-web-app-title" content="PodClash">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="theme-color" content="#b8860b">
+<meta name="theme-color" content="#2a6b8a">
 <meta name="description" content="Discover opposing views across popular podcasts on any topic.">
-<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' fill='%23f5f2ee'/%3E%3Ccircle cx='256' cy='256' r='220' fill='%23b8860b'/%3E%3Ctext x='256' y='340' font-size='240' text-anchor='middle' font-family='Georgia,serif' fill='white'%3E%26%23127897%3B%3C/text%3E%3C/svg%3E">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' fill='%23f5f2ee'/%3E%3Ccircle cx='256' cy='256' r='220' fill='%23b8860b'/%3E%3Ctext x='256' y='340' font-size='240' text-anchor='middle' font-family='Georgia,serif' fill='white'%3E%26%23127897%3B%3C/text%3E%3C/svg%3E">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PodcastClash — Find Opposing Views</title>
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' fill='%23e8f4f0'/%3E%3Ccircle cx='256' cy='256' r='220' fill='%232a6b8a'/%3E%3Ctext x='256' y='340' font-size='240' text-anchor='middle' font-family='Georgia,serif' fill='white'%3E%26%23127897%3B%3C/text%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' fill='%23e8f4f0'/%3E%3Ccircle cx='256' cy='256' r='220' fill='%232a6b8a'/%3E%3Ctext x='256' y='340' font-size='240' text-anchor='middle' font-family='Georgia,serif' fill='white'%3E%26%23127897%3B%3C/text%3E%3C/svg%3E">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>PodClash — Find Opposing Views</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap');
 
+  /* Mediterranean palette:
+     Background: warm sea-foam / pale aqua
+     Surface: crisp white with warm tint
+     Accent A (left): deep Aegean blue
+     Accent B (right): terracotta / sun-baked clay
+     Text: deep olive-charcoal
+     Muted: dusty sage
+  */
   :root {
-    --bg: #f5f2ee;
-    --surface: #ffffff;
-    --surface2: #faf8f5;
-    --border: #ddd9d3;
-    --accent-left: #b8860b;
-    --accent-right: #c0392b;
-    --accent-left-light: #fdf6e3;
-    --accent-right-light: #fdf0ee;
-    --text: #1a1714;
-    --muted: #8a847d;
+    --bg: #e8f4f0;
+    --surface: #f7fbf9;
+    --surface2: #dff0ea;
+    --border: #b0d4c8;
+    --accent-left: #2a6b8a;
+    --accent-right: #c0522a;
+    --accent-left-light: #dceef5;
+    --accent-right-light: #f7ebe5;
+    --text: #1e3a2f;
+    --muted: #5a7d70;
+    --vs: #2a6b8a;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -37,7 +46,11 @@
     font-family: 'DM Sans', sans-serif;
     min-height: 100vh;
     overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
   }
+
+  main { flex: 1; }
 
   header {
     padding: 2.5rem 1.5rem 2rem;
@@ -87,7 +100,7 @@
     border: 1.5px solid var(--border);
     background: var(--surface);
     transition: border-color 0.2s;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    box-shadow: 0 2px 10px rgba(42,107,138,0.08);
   }
 
   .search-row:focus-within { border-color: var(--accent-left); }
@@ -123,7 +136,7 @@
     flex-shrink: 0;
   }
 
-  .search-btn:hover { background: #9a7009; }
+  .search-btn:hover { background: #1e4f68; }
   .search-btn:active { transform: scale(0.98); }
   .search-btn:disabled { background: var(--border); color: var(--muted); cursor: not-allowed; }
 
@@ -165,7 +178,7 @@
   #results {
     max-width: 1080px;
     margin: 0 auto;
-    padding: 0 1.25rem 4rem;
+    padding: 0 1.25rem 2rem;
     display: none;
   }
 
@@ -188,6 +201,7 @@
     font-family: 'Playfair Display', serif;
     font-size: clamp(1.3rem, 4vw, 2.2rem);
     font-weight: 700;
+    color: var(--text);
   }
 
   .versus-layout {
@@ -202,7 +216,7 @@
     border: 1.5px solid var(--border);
     padding: 1.5rem;
     position: relative;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    box-shadow: 0 2px 12px rgba(42,107,138,0.07);
   }
 
   .podcast-card::before {
@@ -232,6 +246,7 @@
     font-weight: 700;
     line-height: 1.2;
     margin-bottom: 0.3rem;
+    color: var(--text);
   }
 
   .episode-name {
@@ -240,31 +255,6 @@
     font-style: italic;
     margin-bottom: 0.85rem;
     line-height: 1.4;
-  }
-
-  .ranking-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-    font-family: 'DM Mono', monospace;
-    font-size: 0.68rem;
-    letter-spacing: 0.04em;
-    padding: 0.28rem 0.6rem;
-    margin-bottom: 0.75rem;
-    font-weight: 500;
-    border-radius: 2px;
-  }
-
-  .podcast-card.left .ranking-badge {
-    background: var(--accent-left-light);
-    color: var(--accent-left);
-    border: 1px solid #e8d48a;
-  }
-
-  .podcast-card.right .ranking-badge {
-    background: var(--accent-right-light);
-    color: var(--accent-right);
-    border: 1px solid #f0c0bb;
   }
 
   .ranking-reason {
@@ -298,7 +288,7 @@
   .summary-text {
     font-size: 0.88rem;
     line-height: 1.7;
-    color: #4a4540;
+    color: var(--muted);
   }
 
   .podcast-link {
@@ -346,7 +336,7 @@
     font-size: 1.5rem;
     font-weight: 900;
     font-style: italic;
-    color: var(--muted);
+    color: var(--vs);
     writing-mode: vertical-rl;
     letter-spacing: 0.1em;
   }
@@ -355,7 +345,8 @@
     border: 1.5px solid var(--border);
     background: var(--surface);
     padding: 1.5rem;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    box-shadow: 0 2px 12px rgba(42,107,138,0.07);
+    margin-bottom: 2rem;
   }
 
   .differences-section h3 {
@@ -366,6 +357,7 @@
     display: flex;
     align-items: center;
     gap: 0.75rem;
+    color: var(--text);
   }
 
   .differences-section h3::after { content: ''; flex: 1; height: 1px; background: var(--border); }
@@ -385,7 +377,7 @@
     font-size: 0.86rem;
     line-height: 1.6;
     position: relative;
-    color: #3a3530;
+    color: var(--text);
   }
 
   .diff-point::before {
@@ -413,11 +405,37 @@
     max-width: 680px;
     margin: 0 auto;
     padding: 1rem 1.25rem;
-    border: 1px solid #f0c0bb;
-    background: #fdf6f5;
+    border: 1px solid #e0b9a8;
+    background: #fdf0ea;
     font-size: 0.88rem;
     color: var(--accent-right);
     font-family: 'DM Mono', monospace;
+  }
+
+  /* Footer */
+  footer {
+    text-align: center;
+    padding: 1.5rem 1rem;
+    border-top: 1px solid var(--border);
+    background: var(--surface);
+    margin-top: 2rem;
+  }
+
+  footer a {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+
+  footer a:hover { color: var(--accent-left); }
+
+  footer a span {
+    color: var(--accent-left);
+    font-weight: 500;
   }
 
   @media (max-width: 640px) {
@@ -437,28 +455,36 @@
     .diff-item { grid-template-columns: 1fr; }
     .diff-point.right { border-left: none; border-top: 1px solid var(--border); }
     .podcast-card { padding: 1.25rem; }
-    #results { padding: 0 1rem 3rem; }
+    #results { padding: 0 1rem 1.5rem; }
   }
 </style>
 </head>
 <body>
 
 <header>
-  <div class="logo">Podcast<span class="clash">Clash</span></div>
+  <div class="logo">Pod<span class="clash">Clash</span></div>
   <div class="tagline">Discover opposing views across popular podcasts</div>
 </header>
 
-<div class="search-section">
-  <label class="search-label" for="topic-input">Enter a topic to analyze</label>
-  <div class="search-row">
-    <input type="text" id="topic-input" placeholder="e.g. AI, vaccines, crypto, climate…" />
-    <button class="search-btn" id="search-btn" onclick="runSearch()">Analyze →</button>
+<main>
+  <div class="search-section">
+    <label class="search-label" for="topic-input">Enter a topic to analyze</label>
+    <div class="search-row">
+      <input type="text" id="topic-input" placeholder="e.g. AI, vaccines, crypto, climate…" />
+      <button class="search-btn" id="search-btn" onclick="runSearch()">Analyze →</button>
+    </div>
   </div>
-</div>
 
-<div id="status-area"></div>
-<div id="error-area" style="max-width:680px;margin:0 auto;padding:0 1.25rem 1rem;"></div>
-<div id="results"></div>
+  <div id="status-area"></div>
+  <div id="error-area" style="max-width:680px;margin:0 auto;padding:0 1.25rem 1rem;"></div>
+  <div id="results"></div>
+</main>
+
+<footer>
+  <a href="https://www.gridnewsbureau.com" target="_blank" rel="noopener">
+    Powered by <span>GNB</span>
+  </a>
+</footer>
 
 <script>
 const STEPS = [
@@ -530,7 +556,6 @@ function cardHTML(pod, side) {
       <div class="card-label ${side}">● Perspective ${side === 'left' ? 'A' : 'B'}</div>
       <div class="podcast-name">${escHtml(pod.name)}</div>
       <div class="episode-name">${escHtml(pod.episode)}${pod.hosts ? ' · ' + escHtml(pod.hosts) : ''}</div>
-      ${pod.rank ? `<div class="ranking-badge">🎙 Rank #${escHtml(String(pod.rank))} · ${escHtml(pod.listeners || '')}</div>` : ''}
       ${pod.why_chosen ? `<div class="ranking-reason">"${escHtml(pod.why_chosen)}"</div>` : ''}
       <div class="section-label">Their Stance</div>
       <div class="stance-text">${escHtml(pod.stance_label)}</div>
