@@ -257,6 +257,30 @@
     line-height: 1.4;
   }
 
+  .ranking-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.04em;
+    padding: 0.28rem 0.65rem;
+    margin-bottom: 0.75rem;
+    font-weight: 500;
+    border-radius: 2px;
+  }
+
+  .podcast-card.left .ranking-badge {
+    background: var(--accent-left-light);
+    color: var(--accent-left);
+    border: 1px solid #a8cfe0;
+  }
+
+  .podcast-card.right .ranking-badge {
+    background: var(--accent-right-light);
+    color: var(--accent-right);
+    border: 1px solid #e0c0a8;
+  }
   .ranking-reason {
     font-size: 0.82rem;
     color: var(--muted);
@@ -556,7 +580,8 @@ function cardHTML(pod, side) {
       <div class="card-label ${side}">● Perspective ${side === 'left' ? 'A' : 'B'}</div>
       <div class="podcast-name">${escHtml(pod.name)}</div>
       <div class="episode-name">${escHtml(pod.episode)}${pod.hosts ? ' · ' + escHtml(pod.hosts) : ''}</div>
-      ${pod.why_chosen ? `<div class="ranking-reason">"${escHtml(pod.why_chosen)}"</div>` : ''}
+      ${pod.rank || pod.listeners ? `<div class="ranking-badge">🎙${pod.rank ? ' Rank #' + escHtml(String(pod.rank)) : ''}${pod.listeners && pod.listeners.toLowerCase() !== 'unknown' ? ' · ' + escHtml(pod.listeners) : ''}</div>` : ''}
+${pod.why_chosen ? `<div class="ranking-reason">"${escHtml(pod.why_chosen)}"</div>` : ''}
       <div class="section-label">Their Stance</div>
       <div class="stance-text">${escHtml(pod.stance_label)}</div>
       <div class="section-label">Position Detail</div>
