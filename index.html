@@ -261,6 +261,15 @@
     color: var(--text);
   }
 
+  .podcast-meta {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.08em;
+    color: var(--accent-left);
+    margin-bottom: 0.3rem;
+    text-transform: uppercase;
+  }
+
   .episode-name {
     font-size: 0.82rem;
     color: var(--muted);
@@ -571,6 +580,7 @@ function cardHTML(pod, side) {
     <div class="podcast-card ${side}">
       <div class="card-label ${side}">● Perspective ${side === 'left' ? 'A' : 'B'}</div>
       <div class="podcast-name">${escHtml(pod.name)}</div>
+      ${(pod.rank || pod.listeners) ? `<div class="podcast-meta">${pod.rank ? `#${pod.rank} ranked` : ''}${pod.rank && pod.listeners ? ' · ' : ''}${pod.listeners ? escHtml(pod.listeners) : ''}</div>` : ''}
       <div class="episode-name">${escHtml(pod.episode)}${pod.hosts ? ' · ' + escHtml(pod.hosts) : ''}</div>
       ${pod.why_chosen ? `<div class="ranking-reason">"${escHtml(pod.why_chosen)}"</div>` : ''}
       <div class="section-label">Their Stance</div>
