@@ -11,7 +11,7 @@ PodClash lets you search any topic and instantly see two well-known podcasts tha
 1. Enter any topic in the search bar
 2. PodClash queries an AI model to identify two real, popular podcasts with meaningfully different perspectives on that topic
 3. Results are displayed in a versus layout with:
-   - Each podcast's name, episode, and hosts
+   - Each podcast's name, rank, listener count, episode, and hosts
    - Their stance and position detail
    - An in-depth summary of their argument
    - A "Where They Differ" comparison across 3 key dimensions
