@@ -645,6 +645,53 @@
 
   footer a span { color: var(--accent-left); font-weight: 500; }
 
+  /* ── SHARE BUTTON ── */
+  .share-row {
+    margin-top: 1rem;
+    text-align: center;
+  }
+
+  .share-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    padding: 14px 32px;
+    border-radius: 14px;
+    background: linear-gradient(to right, #942193, #00B050);
+    border: none;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #fff;
+    cursor: pointer;
+    letter-spacing: 0.03em;
+    box-shadow: 0 6px 20px rgba(148,33,147,0.22);
+    transition: opacity 0.18s, transform 0.1s;
+  }
+
+  .share-btn:hover  { opacity: 0.9; }
+  .share-btn:active { transform: scale(0.99); }
+  .share-btn:disabled { opacity: 0.55; cursor: wait; }
+
+  /* ── SHARE TOAST ── */
+  #share-toast {
+    position: fixed;
+    bottom: 28px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1a1814;
+    color: #fff;
+    padding: 10px 22px;
+    border-radius: 8px;
+    font-size: 0.78rem;
+    font-family: 'DM Mono', monospace;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s;
+    z-index: 9999;
+    white-space: nowrap;
+  }
+
   /* ── RESPONSIVE ── */
   @media (max-width: 640px) {
     header { padding: 1.75rem 1rem 1.5rem; }
@@ -697,6 +744,8 @@
   <!-- Results -->
   <div id="results"></div>
 </main>
+
+<div id="share-toast"></div>
 
 <footer>
   <p style="font-size:0.75rem;color:var(--muted);max-width:600px;margin:0 auto 0.75rem;text-align:center;line-height:1.5;">The summaries are AI-generated and provided for informational purposes only. They may not fully represent a podcast's views. Also, sometimes links to podcasts may not work.</p>
@@ -905,7 +954,10 @@ function toggleWhy() {
   toggle.classList.toggle('collapsed', isOpen);
 }
 
+let currentData = null;
+
 function renderResults(data) {
+  currentData = data;
   const left  = data.podcast_left;
   const right = data.podcast_right;
 
@@ -933,6 +985,13 @@ function renderResults(data) {
     ${diffsHTML(data.key_differences)}
 
     ${whyChosenHTML(data)}
+
+    <div class="share-row">
+      <button id="share-btn" class="share-btn" onclick="shareResults()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+        Share this Clash
+      </button>
+    </div>
   `;
 
   document.getElementById('results').style.display = 'block';
@@ -953,6 +1012,320 @@ document.getElementById('search-btn').addEventListener('click', runSearch);
 document.getElementById('topic-input').addEventListener('keydown', e => {
   if (e.key === 'Enter') runSearch();
 });
+
+// ── AUTO-RUN FROM URL PARAM (?topic=...) ─────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+  const topicParam = new URLSearchParams(window.location.search).get('topic');
+  if (topicParam && topicParam.trim()) {
+    document.getElementById('topic-input').value = topicParam.trim();
+    runSearch();
+  }
+});
+
+// ── SHARE ─────────────────────────────────────────────────────────────────
+async function shareResults() {
+  if (!currentData) return;
+  const btn = document.getElementById('share-btn');
+  if (btn) { btn.disabled = true; btn.innerHTML = '<span style="opacity:.7">Generating image…</span>'; }
+
+  const topic    = currentData.topic;
+  const shareUrl = 'https://pod-clash.vercel.app/?topic=' + encodeURIComponent(topic).replace(/%20/g, '+');
+
+  try {
+    const blob = await generateShareCard(currentData, shareUrl);
+    const file = new File([blob], 'podclash.png', { type: 'image/png' });
+
+    if (navigator.share) {
+      const payload = {
+        text: `Two opposing views on "${topic}" — tap to explore:`,
+        url: shareUrl
+      };
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        payload.files = [file];
+      }
+      await navigator.share(payload);
+    } else {
+      // Desktop fallback: download the image and copy the link
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'podclash.png';
+      a.click();
+      await navigator.clipboard.writeText(shareUrl);
+      showShareToast('Image saved + link copied!');
+    }
+  } catch (err) {
+    if (err.name !== 'AbortError') {
+      try {
+        await navigator.clipboard.writeText('https://pod-clash.vercel.app/?topic=' + encodeURIComponent(topic).replace(/%20/g, '+'));
+        showShareToast('Link copied to clipboard!');
+      } catch (_) { showShareToast('Could not share. Try again.'); }
+    }
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg> Share this Clash';
+    }
+  }
+}
+
+function showShareToast(msg) {
+  const t = document.getElementById('share-toast');
+  t.textContent = msg;
+  t.style.opacity = '1';
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => { t.style.opacity = '0'; }, 2600);
+}
+
+// ── CANVAS SHARE CARD ─────────────────────────────────────────────────────
+async function generateShareCard(data, shareUrl) {
+  await document.fonts.ready;
+
+  const W = 1080, H = 1080;
+  const c = document.createElement('canvas');
+  c.width = W; c.height = H;
+  const ctx = c.getContext('2d');
+
+  const PURPLE = '#942193', GREEN = '#00B050', VS_COL = '#d63a55';
+  const BG = '#fafaf8', WHITE = '#ffffff', BORDER = '#e4e2dc';
+  const DARK = '#1a1814', MUTED = '#8c8880';
+  const PAD = 56;
+
+  // Background gradient
+  const bgG = ctx.createLinearGradient(0, 0, W, H);
+  bgG.addColorStop(0, '#e8ede8'); bgG.addColorStop(.5, '#dfe8f0'); bgG.addColorStop(1, '#ede8e0');
+  ctx.fillStyle = bgG;
+  ctx.fillRect(0, 0, W, H);
+
+  // White card
+  rr(ctx, 28, 28, W - 56, H - 56, 22);
+  ctx.fillStyle = WHITE; ctx.fill();
+
+  // Header gradient strip (top corners rounded only)
+  const hG = ctx.createLinearGradient(28, 0, W - 28, 0);
+  hG.addColorStop(0, PURPLE); hG.addColorStop(1, GREEN);
+  rr(ctx, 28, 28, W - 56, 108, { tl: 22, tr: 22, br: 0, bl: 0 });
+  ctx.fillStyle = hG; ctx.fill();
+
+  // Header: PodClash
+  ctx.fillStyle = WHITE;
+  ctx.font = '900 48px "Playfair Display", Georgia, serif';
+  ctx.textAlign = 'left';
+  ctx.fillText('PodClash', PAD, 101);
+
+  // Header: tag + topic (right-aligned)
+  const topicStr = data.topic.length > 38 ? data.topic.slice(0, 35) + '…' : data.topic;
+  ctx.font = 'italic 400 24px "Playfair Display", Georgia, serif';
+  ctx.textAlign = 'right';
+  ctx.fillText('Opposing Views: ' + topicStr, W - PAD, 100);
+  ctx.textAlign = 'left';
+
+  // ── PODCAST CARDS ──────────────────────────────────────────────────────
+  const CY = 154, CH = 358, CW = 440;
+  const LX = PAD, RX = W - PAD - CW;
+
+  // Left card bg
+  rr(ctx, LX, CY, CW, CH, 14);
+  ctx.fillStyle = 'rgba(148,33,147,0.04)'; ctx.fill();
+  ctx.strokeStyle = 'rgba(148,33,147,0.22)'; ctx.lineWidth = 1.5; ctx.stroke();
+  rr(ctx, LX, CY, CW, 6, { tl: 14, tr: 14, bl: 0, br: 0 });
+  ctx.fillStyle = PURPLE; ctx.fill();
+
+  // Right card bg
+  rr(ctx, RX, CY, CW, CH, 14);
+  ctx.fillStyle = 'rgba(0,176,80,0.04)'; ctx.fill();
+  ctx.strokeStyle = 'rgba(0,176,80,0.22)'; ctx.lineWidth = 1.5; ctx.stroke();
+  rr(ctx, RX, CY, CW, 6, { tl: 14, tr: 14, bl: 0, br: 0 });
+  ctx.fillStyle = GREEN; ctx.fill();
+
+  // Card content
+  drawCardContent(ctx, data.podcast_left,  'A', PURPLE, LX, CY, CW, CH, DARK, MUTED, BORDER);
+  drawCardContent(ctx, data.podcast_right, 'B', GREEN,  RX, CY, CW, CH, DARK, MUTED, BORDER);
+
+  // VS badge
+  const vsX = W / 2, vsY = CY + CH / 2;
+  ctx.beginPath(); ctx.arc(vsX, vsY, 34, 0, Math.PI * 2);
+  ctx.fillStyle = VS_COL; ctx.fill();
+  ctx.fillStyle = WHITE;
+  ctx.font = '700 16px "DM Mono", "Courier New", monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('VS', vsX, vsY + 6);
+  ctx.textAlign = 'left';
+
+  // ── DIFFERENCES ────────────────────────────────────────────────────────
+  const diffs = (data.key_differences || []).slice(0, 3);
+  const DY = CY + CH + 24;
+  const DH = 52 + diffs.length * 98 + 16;
+
+  rr(ctx, PAD, DY, W - PAD * 2, DH, 14);
+  ctx.fillStyle = WHITE; ctx.fill();
+  ctx.strokeStyle = BORDER; ctx.lineWidth = 1; ctx.stroke();
+
+  ctx.fillStyle = DARK;
+  ctx.font = '700 20px "Playfair Display", Georgia, serif';
+  ctx.fillText('Where They Differ', PAD + 20, DY + 36);
+
+  // diff count pill
+  ctx.font = '400 12px "DM Mono","Courier New",monospace';
+  const countTxt = diffs.length + ' points';
+  const cW2 = ctx.measureText(countTxt).width + 20;
+  rr(ctx, W - PAD - cW2 - 4, DY + 18, cW2, 22, 11);
+  ctx.fillStyle = '#f2f1ee'; ctx.fill();
+  ctx.fillStyle = MUTED; ctx.fillText(countTxt, W - PAD - cW2 + 6, DY + 33);
+
+  // divider
+  ctx.beginPath(); ctx.moveTo(PAD + 20, DY + 48); ctx.lineTo(W - PAD - 20, DY + 48);
+  ctx.strokeStyle = BORDER; ctx.lineWidth = 1; ctx.stroke();
+
+  const ICONS = ['⚡', '💡', '📊'];
+  diffs.forEach((d, i) => {
+    const iy = DY + 56 + i * 98;
+
+    if (i > 0) {
+      ctx.beginPath(); ctx.moveTo(PAD + 20, iy - 6); ctx.lineTo(W - PAD - 20, iy - 6);
+      ctx.strokeStyle = BORDER; ctx.lineWidth = 1; ctx.stroke();
+    }
+
+    ctx.font = '20px Arial';
+    ctx.fillStyle = DARK;
+    ctx.fillText(ICONS[i], PAD + 20, iy + 22);
+
+    ctx.font = '600 17px "DM Sans", Arial, sans-serif';
+    ctx.fillText(d.dimension, PAD + 52, iy + 22);
+
+    // A chip
+    ctx.font = '400 12px "DM Mono","Courier New",monospace';
+    const aText = 'A: ' + (d.left_view.length > 48 ? d.left_view.slice(0, 45) + '…' : d.left_view);
+    const aW2 = ctx.measureText(aText).width + 16;
+    rr(ctx, PAD + 52, iy + 34, aW2, 22, 5);
+    ctx.fillStyle = 'rgba(148,33,147,0.09)'; ctx.fill();
+    ctx.fillStyle = PURPLE; ctx.fillText(aText, PAD + 60, iy + 49);
+
+    // B chip
+    const bText = 'B: ' + (d.right_view.length > 48 ? d.right_view.slice(0, 45) + '…' : d.right_view);
+    const bW2 = ctx.measureText(bText).width + 16;
+    rr(ctx, PAD + 52 + aW2 + 8, iy + 34, bW2, 22, 5);
+    ctx.fillStyle = 'rgba(0,176,80,0.09)'; ctx.fill();
+    ctx.fillStyle = GREEN; ctx.fillText(bText, PAD + 60 + aW2 + 8, iy + 49);
+  });
+
+  // ── FOOTER / URL ───────────────────────────────────────────────────────
+  const FY = DY + DH + 18;
+  ctx.fillStyle = MUTED;
+  ctx.font = '400 15px "DM Mono","Courier New",monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText(shareUrl, W / 2, FY + 20);
+
+  // Branding line
+  ctx.font = '400 13px "DM Mono","Courier New",monospace';
+  ctx.fillStyle = '#c0bdb6';
+  ctx.fillText('Powered by GNB · pod-clash.vercel.app', W / 2, FY + 42);
+  ctx.textAlign = 'left';
+
+  return new Promise(resolve => c.toBlob(resolve, 'image/png'));
+}
+
+function drawCardContent(ctx, pod, label, accent, x, y, w, h, DARK, MUTED, BORDER) {
+  const P = 18;
+  let cy = y + 22;
+
+  // View label
+  ctx.fillStyle = accent;
+  ctx.font = '500 12px "DM Mono","Courier New",monospace';
+  ctx.fillText('VIEW ' + label, x + P, cy);
+  cy += 24;
+
+  // Icon + name
+  ctx.font = '18px Arial';
+  ctx.fillStyle = DARK;
+  ctx.fillText(label === 'A' ? '🎙' : '🎤', x + P, cy);
+
+  ctx.font = '700 20px "Playfair Display", Georgia, serif';
+  const nameLines = canvasWrap(ctx, pod.name || '', w - P * 2 - 28, 2);
+  nameLines.forEach((ln, i) => ctx.fillText(ln, x + P + 26, cy - 2 + i * 24));
+  cy += nameLines.length * 24;
+
+  // Hosts
+  if (pod.hosts) {
+    ctx.fillStyle = MUTED;
+    ctx.font = '400 13px "DM Mono","Courier New",monospace';
+    const ht = pod.hosts.length > 44 ? pod.hosts.slice(0, 41) + '…' : pod.hosts;
+    ctx.fillText(ht, x + P, cy + 2);
+    cy += 20;
+  }
+
+  // Rank badge (right-aligned in header area)
+  if (pod.rank) {
+    ctx.font = '500 12px "DM Mono","Courier New",monospace';
+    const rt = '#' + pod.rank + ' of 10';
+    const rW = ctx.measureText(rt).width + 14;
+    rr(ctx, x + w - P - rW, y + 14, rW, 20, 5);
+    ctx.fillStyle = label === 'A' ? 'rgba(148,33,147,0.1)' : 'rgba(0,176,80,0.1)';
+    ctx.fill();
+    ctx.fillStyle = accent;
+    ctx.fillText(rt, x + w - P - rW + 7, y + 28);
+  }
+
+  cy += 8;
+  // Divider
+  ctx.beginPath(); ctx.moveTo(x + P, cy); ctx.lineTo(x + w - P, cy);
+  ctx.strokeStyle = BORDER; ctx.lineWidth = 1; ctx.stroke();
+  cy += 16;
+
+  // Stance label
+  ctx.fillStyle = MUTED;
+  ctx.font = '500 10px "DM Mono","Courier New",monospace';
+  ctx.fillText('THEIR STANCE', x + P, cy);
+  cy += 16;
+
+  ctx.fillStyle = DARK;
+  ctx.font = '600 15px "DM Sans", Arial, sans-serif';
+  const stLines = canvasWrap(ctx, pod.stance_label || '', w - P * 2, 2);
+  stLines.forEach((ln, i) => ctx.fillText(ln, x + P, cy + i * 20));
+  cy += stLines.length * 20 + 10;
+
+  // Summary (condensed)
+  if (pod.stance_detail) {
+    ctx.fillStyle = MUTED;
+    ctx.font = '400 13px "DM Sans", Arial, sans-serif';
+    const sumTxt = pod.stance_detail.length > 180 ? pod.stance_detail.slice(0, 177) + '…' : pod.stance_detail;
+    const sumLines = canvasWrap(ctx, sumTxt, w - P * 2, 4);
+    sumLines.forEach((ln, i) => ctx.fillText(ln, x + P, cy + i * 18));
+  }
+}
+
+// Rounded rect path helper — r can be a number or {tl,tr,br,bl}
+function rr(ctx, x, y, w, h, r) {
+  const s = typeof r === 'number' ? { tl: r, tr: r, br: r, bl: r } : r;
+  ctx.beginPath();
+  ctx.moveTo(x + s.tl, y);
+  ctx.lineTo(x + w - s.tr, y);
+  ctx.arcTo(x + w, y,     x + w, y + s.tr, s.tr);
+  ctx.lineTo(x + w, y + h - s.br);
+  ctx.arcTo(x + w, y + h, x + w - s.br, y + h, s.br);
+  ctx.lineTo(x + s.bl, y + h);
+  ctx.arcTo(x, y + h, x, y + h - s.bl, s.bl);
+  ctx.lineTo(x, y + s.tl);
+  ctx.arcTo(x, y,     x + s.tl, y, s.tl);
+  ctx.closePath();
+}
+
+// Canvas text-wrap: returns array of lines, capped at maxLines
+function canvasWrap(ctx, text, maxW, maxLines) {
+  if (!text) return [''];
+  const words = text.split(' ');
+  const lines = [];
+  let line = '';
+  for (const word of words) {
+    const test = line ? line + ' ' + word : word;
+    if (ctx.measureText(test).width > maxW && line) {
+      lines.push(line);
+      if (lines.length === maxLines) { lines[maxLines - 1] += '…'; return lines; }
+      line = word;
+    } else { line = test; }
+  }
+  if (line) lines.push(line);
+  return lines.slice(0, maxLines);
+}
 </script>
 </body>
 </html>
