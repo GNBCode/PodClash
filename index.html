@@ -19,14 +19,14 @@
   :root {
     --bg: #fafaf8;
     --surface: #ffffff;
-    --surface2: #f2f1ee;
-    --border: #e4e2dc;
+    --surface2: #eeecea;
+    --border: #ccc9c2;
     --accent-left: #1a6fcc;
     --accent-right: #c47b0a;
     --accent-left-light: rgba(26,111,204,0.08);
     --accent-right-light: rgba(196,123,10,0.08);
     --text: #1a1814;
-    --muted: #8c8880;
+    --muted: #5f5c57;
     --vs: #d63a55;
     --blue-dim: rgba(26,111,204,0.08);
     --amber-dim: rgba(196,123,10,0.08);
@@ -175,7 +175,29 @@
     border-radius: 10px;
     padding: 12px 14px;
     transition: border-color 0.2s, box-shadow 0.2s;
+    position: relative;
   }
+
+  .topic-cycle {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(1rem, 4vw, 1.25rem);
+    font-style: italic;
+    color: var(--muted);
+    opacity: 0.75;
+    pointer-events: none;
+    white-space: nowrap;
+    max-width: calc(100% - 60px);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transition: opacity 0.35s ease;
+  }
+
+  .topic-cycle.fading { opacity: 0; }
+  .topic-cycle.hidden { display: none; }
 
   .search-input-row:focus-within {
     border-color: var(--accent-left);
@@ -763,7 +785,8 @@
     <div class="search-block">
       <label class="search-label" for="topic-input">Enter a Topic</label>
       <div class="search-input-row">
-        <input id="topic-input" type="text" placeholder="e.g., Universal Basic Income, AI safety…" autocomplete="off" />
+        <input id="topic-input" type="text" autocomplete="off" />
+        <div id="topic-cycle" class="topic-cycle"></div>
         <div class="mic-icon" title="Type your topic above">🎙</div>
       </div>
     </div>
@@ -1060,6 +1083,57 @@ function escHtml(str) {
     .replace(/"/g, '&quot;');
 }
 
+// ── CYCLING TOPIC PLACEHOLDER ────────────────────────────────────────────
+const EXAMPLE_TOPICS = [
+  'Universal Basic Income',
+  'Books vs. Tablets',
+  'Artificial Intelligence',
+  'Bourbon vs. Whiskey',
+  'Climate Change',
+  'Cats vs. Dogs',
+  'Remote Work',
+  'Skiing vs. Snowboarding',
+  'Cryptocurrency',
+  'Chocolate vs. Vanilla'
+];
+
+let _cycleIdx = 0, _cycleTimer = null;
+
+function startTopicCycle() {
+  const el = document.getElementById('topic-cycle');
+  if (!el) return;
+  el.classList.remove('hidden');
+  el.textContent = EXAMPLE_TOPICS[_cycleIdx];
+  clearInterval(_cycleTimer);
+  _cycleTimer = setInterval(() => {
+    el.classList.add('fading');
+    setTimeout(() => {
+      _cycleIdx = (_cycleIdx + 1) % EXAMPLE_TOPICS.length;
+      el.textContent = EXAMPLE_TOPICS[_cycleIdx];
+      el.classList.remove('fading');
+    }, 350);
+  }, 2600);
+}
+
+function stopTopicCycle() {
+  clearInterval(_cycleTimer);
+  const el = document.getElementById('topic-cycle');
+  if (el) el.classList.add('hidden');
+}
+
+(function initTopicCycle() {
+  const input = document.getElementById('topic-input');
+  input.addEventListener('focus', stopTopicCycle);
+  input.addEventListener('blur', () => {
+    if (!input.value.trim()) { _cycleIdx = 0; startTopicCycle(); }
+  });
+  input.addEventListener('input', () => {
+    const el = document.getElementById('topic-cycle');
+    if (el) el.classList.toggle('hidden', !!input.value);
+  });
+  startTopicCycle();
+})();
+
 document.getElementById('search-btn').addEventListener('click', runSearch);
 
 document.getElementById('topic-input').addEventListener('keydown', e => {
@@ -1071,6 +1145,7 @@ window.addEventListener('DOMContentLoaded', () => {
   const topicParam = new URLSearchParams(window.location.search).get('topic');
   if (topicParam && topicParam.trim()) {
     document.getElementById('topic-input').value = topicParam.trim();
+    stopTopicCycle();
     runSearch();
   }
 });
