@@ -90,6 +90,50 @@
     margin-top: 0.6rem;
   }
 
+  .beta-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #fff;
+    background: linear-gradient(to right, #942193, #00B050);
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 100px;
+    margin-top: 0.55rem;
+  }
+
+  /* ── PORTRAIT LOCK OVERLAY ── */
+  .rotate-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: #1a1814;
+    color: #fff;
+    z-index: 99999;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 2rem;
+    gap: 1rem;
+  }
+
+  .rotate-overlay svg { opacity: 0.7; }
+
+  .rotate-overlay p {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.78rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #8c8880;
+    line-height: 1.6;
+  }
+
+  @media screen and (orientation: landscape) and (max-height: 600px) {
+    .rotate-overlay { display: flex; }
+  }
+
   /* ── SEARCH SECTION ── */
   .search-section {
     max-width: 680px;
@@ -710,6 +754,7 @@
   </div>
   <div class="logo"><span class="pod">Pod</span><span class="clash">Clash</span></div>
   <div class="tagline">Find Opposing Podcast Views</div>
+  <div class="beta-label">This is a beta test</div>
 </header>
 
 <main>
@@ -746,6 +791,14 @@
 </main>
 
 <div id="share-toast"></div>
+
+<div class="rotate-overlay">
+  <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#942193" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="5" y="2" width="14" height="20" rx="2"/>
+    <path d="M12 18h.01"/>
+  </svg>
+  <p>Please rotate your device<br>back to portrait mode</p>
+</div>
 
 <footer>
   <p style="font-size:0.75rem;color:var(--muted);max-width:600px;margin:0 auto 0.75rem;text-align:center;line-height:1.5;">The summaries are AI-generated and provided for informational purposes only. They may not fully represent a podcast's views. Also, sometimes links to podcasts may not work.</p>
