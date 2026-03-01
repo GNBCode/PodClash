@@ -722,6 +722,84 @@
     font-style: italic;
   }
 
+  /* ── COMPROMISE BLOCK ── */
+  .compromise-block {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+    margin-top: 1rem;
+  }
+
+  .compromise-header {
+    padding: 14px 16px 13px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .compromise-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .compromise-badge {
+    background: linear-gradient(to right, rgba(148,33,147,0.1), rgba(0,176,80,0.1));
+    border: 1px solid rgba(148,33,147,0.2);
+    border-radius: 100px;
+    font-size: 0.65rem;
+    color: var(--muted);
+    padding: 2px 9px;
+    font-family: 'DM Mono', monospace;
+  }
+
+  .compromise-intro {
+    font-size: 0.82rem;
+    color: var(--muted);
+    line-height: 1.7;
+    padding: 13px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .compromise-item {
+    padding: 12px 16px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+
+  .compromise-item:first-of-type { border-top: none; }
+
+  .compromise-icon { font-size: 1rem; margin-top: 1px; flex-shrink: 0; }
+
+  .compromise-content { flex: 1; }
+
+  .compromise-dimension {
+    font-size: 0.88rem;
+    color: var(--text);
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+
+  .compromise-middle {
+    font-size: 0.78rem;
+    color: var(--muted);
+    line-height: 1.6;
+    background: linear-gradient(to right, rgba(148,33,147,0.05), rgba(0,176,80,0.05));
+    border-left: 3px solid;
+    border-image: linear-gradient(to bottom, #942193, #00B050) 1;
+    padding: 6px 10px;
+    border-radius: 0 6px 6px 0;
+  }
+
   /* ── FOOTER ── */
   footer {
     text-align: center;
@@ -1076,6 +1154,49 @@ function toggleWhy() {
   toggle.classList.toggle('collapsed', isOpen);
 }
 
+function compromiseHTML(data) {
+  const diffs = data.key_differences || [];
+  if (!diffs.length) return '';
+
+  const left  = data.podcast_left;
+  const right = data.podcast_right;
+  const topic = escHtml(data.topic || 'this topic');
+
+  const COMP_ICONS = ['⚖️', '🤝', '💡'];
+
+  const bridges = [
+    (l, r) => `${l} — yet ${r.charAt(0).toLowerCase() + r.slice(1)} A complete picture holds both realities in balance.`,
+    (l, r) => `While it's true that ${l.charAt(0).toLowerCase() + l.slice(1).replace(/\.$/, '')}, the counter-argument that ${r.charAt(0).toLowerCase() + r.slice(1).replace(/\.$/, '')} is equally valid. Synthesis means drawing on both.`,
+    (l, r) => `${l} This is real. So too is the fact that ${r.charAt(0).toLowerCase() + r.slice(1)} A nuanced stance integrates both rather than choosing sides.`,
+  ];
+
+  const items = diffs.map((d, i) => {
+    const bridge = bridges[i % bridges.length](d.left_view, d.right_view);
+    return `
+      <div class="compromise-item">
+        <div class="compromise-icon">${COMP_ICONS[i % COMP_ICONS.length]}</div>
+        <div class="compromise-content">
+          <div class="compromise-dimension">${escHtml(d.dimension)}</div>
+          <div class="compromise-middle">${escHtml(bridge)}</div>
+        </div>
+      </div>`;
+  }).join('');
+
+  return `
+    <div class="compromise-block">
+      <div class="compromise-header">
+        <div class="compromise-title">
+          <span>Compromise View</span>
+        </div>
+        <div class="compromise-badge">synthesized</div>
+      </div>
+      <div class="compromise-intro">
+        On <em>${topic}</em>, ${escHtml(left.name)} and ${escHtml(right.name)} stake out opposing positions — but a middle-ground perspective finds possible middle ground on both sides across each key dimension.
+      </div>
+      ${items}
+    </div>`;
+}
+
 let currentData = null;
 
 function renderResults(data) {
@@ -1107,6 +1228,8 @@ function renderResults(data) {
     ${diffsHTML(data.key_differences)}
 
     ${whyChosenHTML(data)}
+
+    ${compromiseHTML(data)}
 
     <div class="share-row">
       <button id="share-btn" class="share-btn" onclick="shareResults()">
