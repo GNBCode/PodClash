@@ -977,7 +977,7 @@ function showLoading(topic) {
   document.getElementById('loading-topic').textContent = topic;
   document.getElementById('loading-section').classList.add('visible');
   updateSteps(0);
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  window.scrollTo({ top: 0, behavior: 'instant' });
 }
 
 function hideLoading() {
@@ -990,9 +990,10 @@ async function runSearch(retryCount = 0) {
 
   if (retryCount === 0) {
     document.getElementById('error-area').innerHTML = '';
-    document.getElementById('results').style.display = 'none';
+    document.getElementById('results').innerHTML = '';
     document.getElementById('search-btn').disabled = true;
     showLoading(topic);
+    await new Promise(r => requestAnimationFrame(r));
   }
 
   const timers = [];
