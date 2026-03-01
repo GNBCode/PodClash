@@ -285,20 +285,16 @@
 
   /* ── LOADING SECTION ── */
   #loading-section {
-    max-width: 680px;
-    margin: 0 auto;
-    padding: 0 1.25rem;
-    display: flex;
+    position: fixed;
+    inset: 0;
+    background: rgba(250, 250, 248, 0.97);
+    z-index: 500;
+    display: none;
     flex-direction: column;
     align-items: center;
+    justify-content: center;
     gap: 10px;
-    max-height: 0;
-    overflow: hidden;
-  }
-  #loading-section.visible {
-    max-height: 600px;
-    padding: 3rem 1.25rem;
-    margin: 2rem auto;
+    padding: 2rem 1.25rem;
   }
 
   .loading-orb {
@@ -975,13 +971,12 @@ function updateSteps(activeIdx) {
 
 function showLoading(topic) {
   document.getElementById('loading-topic').textContent = topic;
-  document.getElementById('loading-section').classList.add('visible');
+  document.getElementById('loading-section').style.display = 'flex';
   updateSteps(0);
-  window.scrollTo({ top: 0, behavior: 'instant' });
 }
 
 function hideLoading() {
-  document.getElementById('loading-section').classList.remove('visible');
+  document.getElementById('loading-section').style.display = 'none';
 }
 
 async function runSearch(retryCount = 0) {
@@ -993,7 +988,6 @@ async function runSearch(retryCount = 0) {
     document.getElementById('results').innerHTML = '';
     document.getElementById('search-btn').disabled = true;
     showLoading(topic);
-    await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
   }
 
   const timers = [];
