@@ -288,13 +288,16 @@
 
   /* ── LOADING SECTION ── */
   #loading-section {
-    max-width: 680px;
-    margin: 2rem auto;
-    padding: 3rem 1.25rem;
+    position: fixed;
+    inset: 0;
+    background: rgba(250, 250, 248, 0.97);
+    z-index: 500;
     display: none;
     flex-direction: column;
     align-items: center;
+    justify-content: center;
     gap: 10px;
+    padding: 2rem 1.25rem;
   }
 
   .loading-orb {
@@ -954,16 +957,6 @@
 </footer>
 
 <script>
-// Copy logo from index.html so preview renders correctly
-(function() {
-  try {
-    fetch('index.html').then(r => r.text()).then(html => {
-      const m = html.match(/class="logo-img-wrap">\s*<img[^>]+src="([^"]+)"/);
-      if (m) document.getElementById('logo-img').src = m[1];
-    }).catch(() => {});
-  } catch(e) {}
-})();
-
 const DIFF_ICONS = ['⚡', '💡', '📊', '🔀', '⚖'];
 
 function updateSteps(activeIdx) {
@@ -980,16 +973,13 @@ function updateSteps(activeIdx) {
 }
 
 function showLoading(topic) {
-  document.getElementById('search-section').style.display = 'none';
   document.getElementById('loading-topic').textContent = topic;
-  const ls = document.getElementById('loading-section');
-  ls.style.display = 'flex';
+  document.getElementById('loading-section').style.display = 'flex';
   updateSteps(0);
 }
 
 function hideLoading() {
   document.getElementById('loading-section').style.display = 'none';
-  document.getElementById('search-section').style.display = 'block';
 }
 
 async function runSearch(retryCount = 0) {
