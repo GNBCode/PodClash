@@ -993,7 +993,7 @@ async function runSearch(retryCount = 0) {
     document.getElementById('results').innerHTML = '';
     document.getElementById('search-btn').disabled = true;
     showLoading(topic);
-    await new Promise(r => requestAnimationFrame(r));
+    await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
   }
 
   const timers = [];
