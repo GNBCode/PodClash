@@ -916,18 +916,6 @@
     </div>
   </div>
 
-  <!-- Loading Section -->
-  <div id="loading-section">
-    <div class="loading-orb"></div>
-    <div class="loading-title">Analyzing podcasts on<br><em id="loading-topic"></em></div>
-    <div class="loading-steps" id="loading-steps">
-      <div class="step"><div class="step-dot pending"></div><div class="step-text pending">Found top 10 podcasts by listeners</div></div>
-      <div class="step"><div class="step-dot pending"></div><div class="step-text pending">Fetching episode transcripts</div></div>
-      <div class="step"><div class="step-dot pending"></div><div class="step-text pending">Mapping positions &amp; viewpoints</div></div>
-      <div class="step"><div class="step-dot pending"></div><div class="step-text pending">Identifying strongest contrast</div></div>
-      <div class="step"><div class="step-dot pending"></div><div class="step-text pending">Generating summaries</div></div>
-    </div>
-  </div>
 
   <!-- Error Area -->
   <div id="error-area"></div>
@@ -972,17 +960,26 @@ function updateSteps(activeIdx) {
 }
 
 function showLoading(topic) {
-  document.getElementById('loading-topic').textContent = topic;
-  const ls = document.getElementById('loading-section');
-  ls.style.visibility = 'visible';
-  ls.style.pointerEvents = 'auto';
+  hideLoading();
+  const ls = document.createElement('div');
+  ls.id = 'loading-section';
+  ls.innerHTML = `
+    <div class="loading-orb"></div>
+    <div class="loading-title">Analyzing podcasts on<br><em>${topic.replace(/</g,'&lt;')}</em></div>
+    <div class="loading-steps" id="loading-steps">
+      <div class="step"><div class="step-dot pending"></div><div class="step-text pending">Found top 10 podcasts by listeners</div></div>
+      <div class="step"><div class="step-dot pending"></div><div class="step-text pending">Fetching episode transcripts</div></div>
+      <div class="step"><div class="step-dot pending"></div><div class="step-text pending">Mapping positions &amp; viewpoints</div></div>
+      <div class="step"><div class="step-dot pending"></div><div class="step-text pending">Identifying strongest contrast</div></div>
+      <div class="step"><div class="step-dot pending"></div><div class="step-text pending">Generating summaries</div></div>
+    </div>`;
+  document.body.appendChild(ls);
   updateSteps(0);
 }
 
 function hideLoading() {
   const ls = document.getElementById('loading-section');
-  ls.style.visibility = 'hidden';
-  ls.style.pointerEvents = 'none';
+  if (ls) ls.remove();
 }
 
 async function runSearch(retryCount = 0) {
