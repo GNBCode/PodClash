@@ -65,6 +65,24 @@
     padding: 2rem 2rem 1.75rem;
     box-shadow: 0 4px 28px rgba(0,0,0,0.08);
   }
+  .footer-card {
+    max-width: 680px;
+    margin: 0 auto 1rem;
+    background: rgba(255,255,255,0.92);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 1rem 1.5rem;
+    box-shadow: 0 4px 28px rgba(0,0,0,0.08);
+  }
+  .footer-card p {
+    font-size: 0.75rem;
+    color: var(--muted);
+    text-align: center;
+    line-height: 1.5;
+    margin: 0;
+  }
 
   .logo-img-wrap {
     display: flex;
@@ -836,7 +854,9 @@
 </div>
 
 <footer>
-  <p style="font-size:0.75rem;color:var(--muted);max-width:600px;margin:0 auto 0.75rem;text-align:center;line-height:1.5;">The summaries are AI-generated and provided for informational purposes only. They may not fully represent a podcast's views. Also, sometimes links to podcasts may not work.</p>
+  <div class="footer-card">
+    <p>The summaries are AI-generated and provided for informational purposes only. They may not fully represent a podcast's views. Also, sometimes links to podcasts may not work.</p>
+  </div>
   <a href="https://www.gridnewsbureau.com" target="_blank" rel="noopener">
     Powered by <span>GNB</span>, &copy; 2026
   </a>
