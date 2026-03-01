@@ -289,12 +289,14 @@
     inset: 0;
     background: rgba(250, 250, 248, 0.97);
     z-index: 500;
-    display: none;
+    display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     gap: 10px;
     padding: 2rem 1.25rem;
+    visibility: hidden;
+    pointer-events: none;
   }
 
   .loading-orb {
@@ -971,12 +973,16 @@ function updateSteps(activeIdx) {
 
 function showLoading(topic) {
   document.getElementById('loading-topic').textContent = topic;
-  document.getElementById('loading-section').style.display = 'flex';
+  const ls = document.getElementById('loading-section');
+  ls.style.visibility = 'visible';
+  ls.style.pointerEvents = 'auto';
   updateSteps(0);
 }
 
 function hideLoading() {
-  document.getElementById('loading-section').style.display = 'none';
+  const ls = document.getElementById('loading-section');
+  ls.style.visibility = 'hidden';
+  ls.style.pointerEvents = 'none';
 }
 
 async function runSearch(retryCount = 0) {
