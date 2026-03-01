@@ -961,6 +961,14 @@ function showLoading(topic) {
   hideLoading();
   const ls = document.createElement('div');
   ls.id = 'loading-section';
+  ls.style.cssText = [
+    'position:fixed','top:0','left:0','width:100%','height:100%',
+    'background:rgba(250,250,248,0.97)',
+    'z-index:9999',
+    'display:flex','flex-direction:column',
+    'align-items:center','justify-content:center',
+    'gap:10px','padding:2rem 1.25rem'
+  ].join(';');
   ls.innerHTML = `
     <div class="loading-orb"></div>
     <div class="loading-title">Analyzing podcasts on<br><em>${topic.replace(/</g,'&lt;')}</em></div>
@@ -971,7 +979,7 @@ function showLoading(topic) {
       <div class="step"><div class="step-dot pending"></div><div class="step-text pending">Identifying strongest contrast</div></div>
       <div class="step"><div class="step-dot pending"></div><div class="step-text pending">Generating summaries</div></div>
     </div>`;
-  document.body.appendChild(ls);
+  document.documentElement.appendChild(ls);
   updateSteps(0);
 }
 
