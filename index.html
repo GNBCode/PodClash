@@ -290,13 +290,6 @@
     align-items: center;
     gap: 10px;
     width: 100%;
-    max-height: 0;
-    overflow: hidden;
-    padding: 0;
-  }
-  #loading-section.visible {
-    max-height: 500px;
-    padding: 1.5rem 0 0.5rem;
   }
 
   .loading-orb {
@@ -913,7 +906,7 @@
           Analyze
         </button>
       </div>
-      <div id="loading-section">
+      <div id="loading-section" style="height:0;overflow:hidden;padding:0">
         <div class="loading-orb"></div>
         <div class="loading-title">Analyzing podcasts on<br><em id="loading-topic"></em></div>
         <div class="loading-steps" id="loading-steps">
@@ -972,12 +965,18 @@ function updateSteps(activeIdx) {
 
 function showLoading(topic) {
   document.getElementById('loading-topic').textContent = topic;
-  document.getElementById('loading-section').classList.add('visible');
+  const ls = document.getElementById('loading-section');
+  ls.style.height = 'auto';
+  ls.style.overflow = 'visible';
+  ls.style.padding = '1.5rem 0 0.5rem';
   updateSteps(0);
 }
 
 function hideLoading() {
-  document.getElementById('loading-section').classList.remove('visible');
+  const ls = document.getElementById('loading-section');
+  ls.style.height = '0';
+  ls.style.overflow = 'hidden';
+  ls.style.padding = '0';
 }
 
 async function runSearch(retryCount = 0) {
