@@ -977,6 +977,7 @@ function showLoading(topic) {
   document.getElementById('loading-topic').textContent = topic;
   document.getElementById('loading-section').classList.add('visible');
   updateSteps(0);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function hideLoading() {
