@@ -286,12 +286,19 @@
   /* ── LOADING SECTION ── */
   #loading-section {
     max-width: 680px;
-    margin: 2rem auto;
-    padding: 3rem 1.25rem;
-    display: none;
+    margin: 0 auto;
+    padding: 0 1.25rem;
+    display: flex;
     flex-direction: column;
     align-items: center;
     gap: 10px;
+    max-height: 0;
+    overflow: hidden;
+  }
+  #loading-section.visible {
+    max-height: 600px;
+    padding: 3rem 1.25rem;
+    margin: 2rem auto;
   }
 
   .loading-orb {
@@ -968,12 +975,12 @@ function updateSteps(activeIdx) {
 
 function showLoading(topic) {
   document.getElementById('loading-topic').textContent = topic;
-  document.getElementById('loading-section').style.display = 'flex';
+  document.getElementById('loading-section').classList.add('visible');
   updateSteps(0);
 }
 
 function hideLoading() {
-  document.getElementById('loading-section').style.display = 'none';
+  document.getElementById('loading-section').classList.remove('visible');
 }
 
 async function runSearch(retryCount = 0) {
