@@ -279,27 +279,32 @@
   .analyze-btn:hover { opacity: 0.92; }
   .analyze-btn:active { transform: scale(0.99); }
   .analyze-btn:disabled {
-    cursor: default;
+    background: var(--border);
+    color: var(--muted);
+    cursor: not-allowed;
+    box-shadow: none;
     opacity: 1;
   }
 
   /* ── LOADING SECTION ── */
   #loading-section {
-    display: flex;
+    max-width: 680px;
+    margin: 2rem auto;
+    padding: 3rem 1.25rem;
+    display: none;
     flex-direction: column;
     align-items: center;
     gap: 10px;
-    width: 100%;
   }
 
   .loading-orb {
     width: 72px;
     height: 72px;
     border-radius: 50%;
-    background: conic-gradient(from 0deg, #942193, #000000, #00B050, #942193);
+    background: conic-gradient(from 0deg, #942193, #000000, #00B050, #000000, #942193);
     animation: orbSpin 1.8s linear infinite;
     margin-bottom: 20px;
-    box-shadow: 0 0 48px rgba(148,33,147,0.25);
+    box-shadow: 0 0 48px rgba(148,33,147,0.3);
     flex-shrink: 0;
   }
 
@@ -906,20 +911,21 @@
           Analyze
         </button>
       </div>
-      <div id="loading-section" style="height:0;overflow:hidden;padding:0">
-        <div class="loading-orb"></div>
-        <div class="loading-title">Analyzing podcasts on<br><em id="loading-topic"></em></div>
-        <div class="loading-steps" id="loading-steps">
-          <div class="step"><div class="step-dot pending"></div><div class="step-text pending">Found top 10 podcasts by listeners</div></div>
-          <div class="step"><div class="step-dot pending"></div><div class="step-text pending">Fetching episode transcripts</div></div>
-          <div class="step"><div class="step-dot pending"></div><div class="step-text pending">Mapping positions &amp; viewpoints</div></div>
-          <div class="step"><div class="step-dot pending"></div><div class="step-text pending">Identifying strongest contrast</div></div>
-          <div class="step"><div class="step-dot pending"></div><div class="step-text pending">Generating summaries</div></div>
-        </div>
-      </div>
     </div>
   </div>
 
+  <!-- Loading Section -->
+  <div id="loading-section">
+    <div class="loading-orb"></div>
+    <div class="loading-title">Analyzing podcasts on<br><em id="loading-topic"></em></div>
+    <div class="loading-steps" id="loading-steps">
+      <div class="step"><div class="step-dot pending"></div><div class="step-text pending">Found top 10 podcasts by listeners</div></div>
+      <div class="step"><div class="step-dot pending"></div><div class="step-text pending">Fetching episode transcripts</div></div>
+      <div class="step"><div class="step-dot pending"></div><div class="step-text pending">Mapping positions &amp; viewpoints</div></div>
+      <div class="step"><div class="step-dot pending"></div><div class="step-text pending">Identifying strongest contrast</div></div>
+      <div class="step"><div class="step-dot pending"></div><div class="step-text pending">Generating summaries</div></div>
+    </div>
+  </div>
 
   <!-- Error Area -->
   <div id="error-area"></div>
@@ -948,6 +954,16 @@
 </footer>
 
 <script>
+// Copy logo from index.html so preview renders correctly
+(function() {
+  try {
+    fetch('index.html').then(r => r.text()).then(html => {
+      const m = html.match(/class="logo-img-wrap">\s*<img[^>]+src="([^"]+)"/);
+      if (m) document.getElementById('logo-img').src = m[1];
+    }).catch(() => {});
+  } catch(e) {}
+})();
+
 const DIFF_ICONS = ['⚡', '💡', '📊', '🔀', '⚖'];
 
 function updateSteps(activeIdx) {
@@ -964,19 +980,18 @@ function updateSteps(activeIdx) {
 }
 
 function showLoading(topic) {
+  window.scrollTo(0, 0); // reset scroll so loading section (near top) stays visible
+  document.getElementById('search-section').style.display = 'none';
   document.getElementById('loading-topic').textContent = topic;
   const ls = document.getElementById('loading-section');
-  ls.style.height = 'auto';
-  ls.style.overflow = 'visible';
-  ls.style.padding = '1.5rem 0 0.5rem';
+  ls.style.display = 'flex';
+  void ls.offsetHeight; // force Safari repaint + animation restart
   updateSteps(0);
 }
 
 function hideLoading() {
-  const ls = document.getElementById('loading-section');
-  ls.style.height = '0';
-  ls.style.overflow = 'hidden';
-  ls.style.padding = '0';
+  document.getElementById('loading-section').style.removeProperty('display'); // restore CSS display:none so next show is always CSS→inline, matching first-search behaviour
+  document.getElementById('search-section').style.display = 'block';
 }
 
 async function runSearch(retryCount = 0) {
@@ -985,7 +1000,7 @@ async function runSearch(retryCount = 0) {
 
   if (retryCount === 0) {
     document.getElementById('error-area').innerHTML = '';
-    document.getElementById('results').innerHTML = '';
+    document.getElementById('results').style.display = 'none';
     document.getElementById('search-btn').disabled = true;
     showLoading(topic);
   }
