@@ -993,19 +993,22 @@ function hideLoading() {
   document.getElementById('search-section').style.display = 'block';
 }
 
-async function runSearch() {
+async function runSearch(retryCount = 0) {
   const topic = document.getElementById('topic-input').value.trim();
   if (!topic) return;
 
-  document.getElementById('error-area').innerHTML = '';
-  document.getElementById('results').style.display = 'none';
-  document.getElementById('search-btn').disabled = true;
-
-  showLoading(topic);
+  if (retryCount === 0) {
+    document.getElementById('error-area').innerHTML = '';
+    document.getElementById('results').style.display = 'none';
+    document.getElementById('search-btn').disabled = true;
+    showLoading(topic);
+  }
 
   const timers = [];
-  for (let i = 0; i < 5; i++) {
-    timers.push(setTimeout(() => updateSteps(i), i * 1100));
+  if (retryCount === 0) {
+    for (let i = 0; i < 5; i++) {
+      timers.push(setTimeout(() => updateSteps(i), i * 1100));
+    }
   }
 
   try {
@@ -1019,19 +1022,31 @@ async function runSearch() {
     if (!response.ok) throw new Error(data.error || 'Something went wrong.');
 
     timers.forEach(clearTimeout);
-    updateSteps(5); // all steps done
+    updateSteps(5);
 
     setTimeout(() => {
       hideLoading();
       renderResults(data);
     }, 380);
 
+    document.getElementById('search-btn').disabled = false;
+
   } catch (err) {
     timers.forEach(clearTimeout);
+
+    const isParseError = err.message && err.message.includes('Could not parse AI response');
+
+    if (isParseError && retryCount === 0) {
+      runSearch(1);
+      return;
+    }
+
     hideLoading();
+    const msg = isParseError
+      ? 'We are experiencing a high traffic issue. Please try again, or try a different topic. Very sorry!'
+      : (err.message || 'Something went wrong. Please try again.');
     document.getElementById('error-area').innerHTML =
-      `<div class="error-box">⚠ ${escHtml(err.message || 'Something went wrong. Please try again.')}</div>`;
-  } finally {
+      `<div class="error-box">⚠ ${escHtml(msg)}</div>`;
     document.getElementById('search-btn').disabled = false;
   }
 }
